@@ -142,6 +142,42 @@ public:
     }
 };
 
+//захоплення зображення
+
+class MediaSource {
+protected:
+    std::string source_name;
+    bool is_capturing = false;
+public:
+    MediaSource(std::string name) : source_name(std::move(name)) {}
+    virtual ~MediaSource() = default;
+
+    virtual void start() = 0;
+    virtual void stop() = 0;
+    virtual MediaPacket grabNextPacket() = 0;
+};
+
+class MockVideoCapturer : public MediaSource {
+private:
+    int frame_counter = 0;
+    std::string target_app;
+public:
+    MockVideoCapturer(std::string app) : MediaSource("DesktopDuplication"), target_app(std::move(app)) {}
+
+    void start() override {
+        is_capturing = true;
+    }
+
+    void stop() override {
+        is_capturing = false;
+    }
+
+    MediaPacket grabNextPacket() override {
+        frame_counter++;
+        return { frame_counter, 0, "PixelData_From_" + target_app };
+    }
+};
+
 int main() {
     return 0;
 }
