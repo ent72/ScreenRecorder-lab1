@@ -3,6 +3,6 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="ScreenRecorder/ScreenRecorder.vcxproj" />
-  <Project Path="test/test.vcxproj" />
+  <Project Path="ScreenRecorder/ScreenRecorder.vcxproj" Id="be551214-b2cd-4068-84bf-c25450627f86" />
+  <Project Path="test/test.vcxproj" Id="7c086a6f-6fa8-4b2d-885d-68110deddce0" />
 </Solution>
