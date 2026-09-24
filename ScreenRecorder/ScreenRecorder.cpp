@@ -67,6 +67,29 @@ public:
     size_t getCapacity() const { return max_size; }
 };
 
+// логування
+
+class ILogger {
+public:
+    virtual ~ILogger() = default;
+    virtual void logInfo(const std::string& message) = 0;
+    virtual void logWarning(const std::string& message) = 0;
+    virtual void logError(const std::string& message) = 0;
+};
+
+class ConsoleLogger : public ILogger {
+public:
+    void logInfo(const std::string& message) override {
+        std::cout << "[INFO] " << message << "\n";
+    }
+    void logWarning(const std::string& message) override {
+        std::cout << "[WARN] " << message << "\n";
+    }
+    void logError(const std::string& message) override {
+        std::cerr << "[ERROR] " << message << "\n";
+    }
+};
+
 int main() {
     return 0;
 }
