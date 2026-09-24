@@ -1,3 +1,7 @@
+/**
+ * @file main.cpp
+ * @brief Screen Recorder MVP with Highlight Triggers (Lab 1)
+ */
 #include <iostream>
 #include <vector>
 #include <string>
@@ -10,12 +14,19 @@
 
 //базові структури
 
+/**
+  * @brief Structure representing a single media element.
+  */
 struct MediaPacket {
     int id;
     long long timestamp_ms;
     std::string mock_data;
 };
 
+/**
+ * @brief Thread-safe template Ring Buffer (Static Polymorphism).
+ * @tparam T Type of data to store (e.g., MediaPacket).
+ */
 template <typename T>
 class RingBuffer {
 private:
@@ -27,7 +38,15 @@ private:
     std::mutex mtx;
 
 public:
+    /**
+     * @brief Constructor initializing buffer capacity.
+     * @param size Maximum number of elements.
+     */
     explicit RingBuffer(size_t size) : max_size(size), buffer(size) {}
+    /**
+     * @brief Pushes a new element into the buffer, overwriting oldest if full.
+     * @param item Element to insert.
+     */
     void push(T item) {
         std::lock_guard<std::mutex> lock(mtx);
         buffer[head] = item;
@@ -37,7 +56,10 @@ public:
         head = (head + 1) % max_size;
         full = head == tail;
     }
-
+    /**
+     * @brief Retrieves all elements currently in the buffer in chronological order.
+     * @return Vector of elements.
+     */
     std::vector<T> getAll() {
         std::lock_guard<std::mutex> lock(mtx);
         std::vector<T> result;
@@ -55,7 +77,10 @@ public:
         head = tail = 0;
         full = false;
     }
-
+    /**
+    * @brief Safely resizes the buffer without copying the mutex.
+    * @param new_size The new maximum capacity of the buffer.
+    */
     void resize(size_t new_size) {
         std::lock_guard<std::mutex> lock(mtx);
         buffer.resize(new_size);
@@ -212,7 +237,9 @@ public:
     Application(std::shared_ptr<ILogger> log)
         : logger(log), video_buffer(600), is_running(false) {
     }
-
+    /**
+     * @brief Initializes all modules, triggers, and mock data.
+     */
     void initialize() {
         try {
             logger->logInfo("Initializing Application...");
@@ -229,7 +256,9 @@ public:
             logger->logError(std::string("Init failed: ") + e.what());
         }
     }
-
+    /**
+    * @brief Simulates the main loop of the screen recorder.
+    */
     void run() {
         is_running = true;
         video_source->start();
@@ -255,7 +284,10 @@ public:
         video_source->stop();
         logger->logInfo("Application shutdown safely.");
     }
-
+    /**
+     * @brief Dumps the buffer to a mock video file.
+     * @param reason The trigger name that caused the save.
+     */
     void saveHighlight(const std::string& reason) {
         auto frames = video_buffer.getAll();
         logger->logWarning("HIGHLIGHT SAVED! Trigger: " + reason);
