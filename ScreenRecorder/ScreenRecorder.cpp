@@ -89,6 +89,58 @@ public:
         std::cerr << "[ERROR] " << message << "\n";
     }
 };
+// тригери
+
+class HighlightTrigger {
+protected:
+    std::string name;
+public:
+    explicit HighlightTrigger(std::string triggerName) : name(std::move(triggerName)) {}
+    virtual ~HighlightTrigger() = default;
+    virtual bool checkCondition() = 0;
+    std::string getName() const { return name; }
+};
+
+class HotkeyTrigger : public HighlightTrigger {
+private:
+    std::string key_combo;
+public:
+    HotkeyTrigger(std::string key) : HighlightTrigger("Hotkey"), key_combo(std::move(key)) {}
+
+    bool checkCondition() override {
+        return (rand() % 100) > 95;
+    }
+};
+
+class AudioVolumeTrigger : public HighlightTrigger {
+private:
+    float threshold_db;
+    float current_mock_volume;
+public:
+    AudioVolumeTrigger(float threshold) : HighlightTrigger("AudioSpike"), threshold_db(threshold), current_mock_volume(0.0f) {}
+
+    bool checkCondition() override {
+        current_mock_volume = static_cast<float>(rand() % 120);
+        return current_mock_volume > threshold_db;
+    }
+};
+
+class TimerTrigger : public HighlightTrigger {
+private:
+    int interval_seconds;
+    int ticks;
+public:
+    TimerTrigger(int seconds) : HighlightTrigger("Timer"), interval_seconds(seconds), ticks(0) {}
+
+    bool checkCondition() override {
+        ticks++;
+        if (ticks >= interval_seconds) {
+            ticks = 0;
+            return true;
+        }
+        return false;
+    }
+};
 
 int main() {
     return 0;
