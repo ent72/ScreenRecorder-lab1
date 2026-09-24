@@ -4,4 +4,5 @@
     <Platform Name="x86" />
   </Configurations>
   <Project Path="ScreenRecorder/ScreenRecorder.vcxproj" />
+  <Project Path="test/test.vcxproj" />
 </Solution>
