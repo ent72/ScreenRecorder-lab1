@@ -178,6 +178,99 @@ public:
     }
 };
 
+//головний клас
+
+class ConfigManager {
+private:
+    int fps;
+    int buffer_size_sec;
+    std::string target_game;
+public:
+    ConfigManager() : fps(60), buffer_size_sec(30), target_game("Unknown") {}
+
+    void loadDefaults() {
+        fps = 60;
+        buffer_size_sec = 15;
+        target_game = "Forza Horizon 6";
+    }
+
+    int getFps() const { return fps; }
+    int getBufferSizeFrames() const { return fps * buffer_size_sec; }
+    std::string getTargetGame() const { return target_game; }
+};
+
+class Application {
+private:
+    std::shared_ptr<ILogger> logger;
+    ConfigManager config;
+    RingBuffer<MediaPacket> video_buffer;
+    std::vector<std::unique_ptr<HighlightTrigger>> triggers;
+    std::unique_ptr<MediaSource> video_source;
+    bool is_running;
+
+public:
+    Application(std::shared_ptr<ILogger> log)
+        : logger(log), video_buffer(600), is_running(false) {
+    }
+
+    void initialize() {
+        try {
+            logger->logInfo("Initializing Application...");
+            config.loadDefaults();
+            video_buffer.resize(config.getBufferSizeFrames());
+            video_source = std::make_unique<MockVideoCapturer>(config.getTargetGame());
+            triggers.push_back(std::make_unique<HotkeyTrigger>("Alt+F10"));
+            triggers.push_back(std::make_unique<AudioVolumeTrigger>(100.0f));
+            triggers.push_back(std::make_unique<TimerTrigger>(50));
+
+            logger->logInfo("Hooked into target: " + config.getTargetGame());
+        }
+        catch (const std::exception& e) {
+            logger->logError(std::string("Init failed: ") + e.what());
+        }
+    }
+
+    void run() {
+        is_running = true;
+        video_source->start();
+        logger->logInfo("Recording started. Waiting for highlights...");
+
+        int loop_count = 0;
+        while (is_running && loop_count < 100) {
+            MediaPacket frame = video_source->grabNextPacket();
+            video_buffer.push(frame);
+
+            for (const auto& trigger : triggers) {
+                if (trigger->checkCondition()) {
+                    saveHighlight(trigger->getName());
+                    video_buffer.clear();
+                    break;
+                }
+            }
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(16));
+            loop_count++;
+        }
+
+        video_source->stop();
+        logger->logInfo("Application shutdown safely.");
+    }
+
+    void saveHighlight(const std::string& reason) {
+        auto frames = video_buffer.getAll();
+        logger->logWarning("HIGHLIGHT SAVED! Trigger: " + reason);
+        logger->logInfo("Encoded " + std::to_string(frames.size()) + " frames into highlight.mp4\n");
+    }
+};
+
 int main() {
+    srand(static_cast<unsigned int>(time(nullptr)));
+
+    std::shared_ptr<ILogger> consoleLog = std::make_shared<ConsoleLogger>();
+    Application app(consoleLog);
+
+    app.initialize();
+    app.run();
+
     return 0;
 }
